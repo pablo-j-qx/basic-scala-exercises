@@ -3,6 +3,7 @@ package b01
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 
+import scala.annotation.tailrec
 import scala.collection.mutable.ListBuffer
 
 class FromImperative extends AnyWordSpec with Matchers {
@@ -13,7 +14,7 @@ class FromImperative extends AnyWordSpec with Matchers {
       }
     }
 
-    def funByTwo(numbers: ListBuffer[Int]): Unit = ???
+    def funByTwo(numbers: List[Int]): List[Int] = numbers.map(_*2)
 
     "be solved imperatively" in {
       val numbers = ListBuffer(1, 2, 3, 4, 5)
@@ -24,10 +25,10 @@ class FromImperative extends AnyWordSpec with Matchers {
     }
 
     "be solved functionally" in {
-      val numbers = ListBuffer(1, 2, 3, 4, 5)
-      funByTwo(numbers)
+      val numbers = List(1, 2, 3, 4, 5)
+      val result = funByTwo(numbers)
 
-      numbers shouldBe ListBuffer(2, 4, 6, 8, 10)
+      result shouldBe List(2, 4, 6, 8, 10)
 
     }
   }
@@ -48,7 +49,11 @@ class FromImperative extends AnyWordSpec with Matchers {
       results.take(j).toList
     }
 
-    def funDivideByTwo(numbers: List[Int]): List[Int] = ???
+    def funDivideByTwo(numbers: List[Int]): List[Int] = numbers.filter(_ % 2 == 0).map(_ / 2)
+    def forDivideByTwo(numbers: List[Int]): List[Int] = for {
+      n <- numbers
+      if n % 2 == 0
+    } yield n / 2
 
     "be solved imperatively" in {
       val numbers = List(1, 2, 3, 4, 5, 6)
@@ -58,10 +63,17 @@ class FromImperative extends AnyWordSpec with Matchers {
     }
 
     "be solved functionally" in {
-      val numbers = List(1, 2, 3, 4, 5)
-      funDivideByTwo(numbers)
+      val numbers = List(1, 2, 3, 4, 5, 6)
+      val result = funDivideByTwo(numbers)
 
-      numbers shouldBe List(1, 2, 3)
+      result shouldBe List(1, 2, 3)
+    }
+
+    "be solved with for" in {
+      val numbers = List(1, 2, 3, 4, 5, 6)
+      val result = forDivideByTwo(numbers)
+
+      result shouldBe List(1, 2, 3)
     }
   }
 
@@ -76,7 +88,7 @@ class FromImperative extends AnyWordSpec with Matchers {
       acc.toDouble / numbers.size
     }
 
-    def funAverage(numbers: List[Int]): Double = ???
+    def funAverage(numbers: List[Int]): Double = numbers.fold(0)(_ + _) / numbers.size
 
 
     val cases: Map[String, List[Int] => Double] = Map(
@@ -104,11 +116,17 @@ class FromImperative extends AnyWordSpec with Matchers {
       results.toList
     }
 
-    def funAddLists(list1: List[Int], list2: List[Int]): List[Int] = ???
+    def funAddLists(list1: List[Int], list2: List[Int]): List[Int] = list1.zip(list2).map(t => t._1 + t._2)
+    def forAddLists(list1: List[Int], list2: List[Int]): List[Int] = for {
+      a <- list1
+      b <- list2
+    } yield a + b
 
     val cases = Map(
       "be solved imperatively" -> impAddLists _,
-      "be solved functionally" -> funAddLists _
+      "be solved functionally" -> funAddLists _,
+      "be solved in for"       -> funAddLists _
+
     )
 
     checkAll2(cases) {
@@ -136,11 +154,16 @@ class FromImperative extends AnyWordSpec with Matchers {
       result.toList
     }
 
-    def funPermutations(list: List[Int]): List[(Int, Int)] = ???
+    def funPermutations(list: List[Int]): List[(Int, Int)] = list.flatMap(x => list.map(y => (x, y)))
+    def forPermutations(list: List[Int]): List[(Int, Int)] = for {
+      x <- list
+      y <- list
+    } yield (x,y)
 
     val cases = Map(
       "be solved imperatively" -> impPermutations _,
-      "be solved functionally" -> funPermutations _
+      "be solved functionally" -> funPermutations _,
+      "be solved with for"     -> forPermutations _
     )
 
     checkAll(cases) {
@@ -164,7 +187,17 @@ class FromImperative extends AnyWordSpec with Matchers {
       max
     }
 
-    def funMax(list: List[Int]): Int = ???
+    def funMax(list: List[Int]): Int = {
+      @tailrec
+      def maxRec(list: List[Int], currentMax: Int): Int = list match{
+        case Nil => currentMax
+        case head :: tail =>
+          val newMax = head.max(currentMax)
+          maxRec(tail, newMax)
+      }
+
+      maxRec(list, Int.MinValue)
+    }
 
     val cases = Map(
       "be solved imperatively" -> impMax _,
@@ -191,7 +224,18 @@ class FromImperative extends AnyWordSpec with Matchers {
       current
     }
 
-    def funFactorial(number: Long): Long = ???
+    def funFactorial(number: Long): Long = {
+      require(number >= 0)
+
+      @tailrec
+      def factorialRec(number: Long, acc: Long): Long = number match {
+        case 0 => 1
+        case 1 => acc
+        case _ => factorialRec(number - 1, acc*number)
+      }
+
+      factorialRec(number, 1)
+    }
 
     val cases = Map(
       "be solved imperatively" -> impFactorial _,
