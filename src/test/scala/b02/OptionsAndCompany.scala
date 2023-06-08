@@ -98,7 +98,18 @@ class OptionsAndCompany extends AnyWordSpec with Matchers {
       val organization = Organization(Seq(dept1, dept2))
 
       // Now the function to be tested
-      def getAllEmails(organization: Organization): Seq[String] = ???
+      def getAllEmails(organization: Organization): Seq[String] = {
+        def getPersonEmail(person: Person): Option[String] = for {
+          contact <- person.contactInformation
+          email <- contact.email
+        } yield email
+
+        (for {
+          department <- organization.departments
+          boss = department.boss
+          person <- boss.toList ++ department.employees
+        } yield getPersonEmail(person)).flatMap(_.toList)
+      }
 
       "get all availabe emails" in {
         getAllEmails(organization) should contain theSameElementsAs List(
@@ -116,62 +127,63 @@ class OptionsAndCompany extends AnyWordSpec with Matchers {
     val none: Option[Int] = None
 
     "empty" in {
-      List(1, 2, 3).isEmpty should be (???)
-      List().isEmpty should be (???)
-      Some(2).isEmpty should be (???)
-      None.isEmpty should be (???)
+      List(1, 2, 3).isEmpty should be (false)
+      List().isEmpty should be (true)
+      Some(2).isEmpty should be (false)
+      None.isEmpty should be (true)
     }
 
     "map" in {
-      List(1, 2, 3).map(_ * 2) shouldBe ???
-      Some(2).map(_ * 2) shouldBe ???
-      none.map(_ * 2) shouldBe ???
+      List(1, 2, 3).map(_ * 2) shouldBe List(2, 4, 6)
+      Some(2).map(_ * 2) shouldBe Some(4)
+      none.map(_ * 2) shouldBe None
     }
     "flatten" in {
-      List(List(1, 2, 3), List(4, 5, 6)).flatten shouldBe ???
-      Some(Some(2)).flatten shouldBe ???
-      Some(none).flatten shouldBe ???
+      List(List(1, 2, 3), List(4, 5, 6)).flatten shouldBe List(1, 2, 3, 4, 5, 6)
+      Some(Some(2)).flatten shouldBe Some(2)
+      Some(none).flatten shouldBe None
       val noneOption: Option[Option[Int]] = None
-      noneOption.flatten shouldBe ???
+      noneOption.flatten shouldBe None
     }
 
     "filter" in {
       def isEven(x: Int): Boolean = x % 2 == 0
 
-      List(1, 2, 3, 4, 5).filter(isEven) shouldBe ???
-      Some(2).filter(isEven) shouldBe ???
-      Some(1).filter(isEven) shouldBe ???
-      None.filter(isEven) shouldBe ???
+      List(1, 2, 3, 4, 5).filter(isEven) shouldBe List(2, 4)
+      Some(2).filter(isEven) shouldBe Some(2)
+      Some(1).filter(isEven) shouldBe None
+      None.filter(isEven) shouldBe None
 
     }
 
     "find" in {
       def isEven(x: Int): Boolean = x % 2 == 0
 
-      List(1, 2, 3, 4, 5).find(isEven) shouldBe ???
-      List(1, 3, 5).find(isEven) shouldBe ???
-      Some(2).find(isEven) shouldBe ???
-      Some(1).find(isEven) shouldBe ???
-      None.find(isEven) shouldBe ???
+      List(1, 2, 3, 4, 5).find(isEven) shouldBe Some(2)
+      List(1, 3, 5).find(isEven) shouldBe None
+      Some(2).find(isEven) shouldBe Some(2)
+      Some(1).find(isEven) shouldBe None
+      None.find(isEven) shouldBe None
     }
 
     "fold" in {
-      List(1, 2, 3, 4).fold(0)(_ + _) should be (???)
+      List(1, 2, 3, 4).fold(0)(_ + _) should be (10)
 
       List(1, 2, 3, 4).fold(0){ case (acc, value) =>
         acc + value
-      } should be (???)
+      } should be (10)
 
       def add(a: Int, b: Int): Int = a + b
 
-      List(1, 2, 3, 4).fold(0)(add) should be (???)
+      List(1, 2, 3, 4).fold(0)(add) should be (10)
 
-      Some(2).fold(0)(8 / _) should be (???)
-      None.fold(0)(8 / _) should be (???)
+      def divideEight(x: Int): Int = 8 / x
+      Some(2).fold(0)(divideEight) should be (4)
+      None.fold(0)(divideEight) should be (0)
 
-      def whatDoIHave(x: Option[Int]): String = x.fold("nothing")(€ => s"$€ euros")
-      s"I have ${whatDoIHave(Some(2))}." shouldBe ???
-      s"I have ${whatDoIHave(None)}." shouldBe ???
+      def whatDoIHave(x: Option[Int]): String = x.fold("nothing"){e => s"$e euros"}
+      s"I have ${whatDoIHave(Some(2))}." shouldBe "I have 2 euros."
+      s"I have ${whatDoIHave(None)}." shouldBe "I have nothing."
 
     }
   }
