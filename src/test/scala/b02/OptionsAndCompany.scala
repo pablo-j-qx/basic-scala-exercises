@@ -112,7 +112,16 @@ class OptionsAndCompany extends AnyWordSpec with Matchers {
   }
 
   "Option and other monads operations" should {
+    // We use this val as equivalent to None when we need the compiler to be aware of the types
     val none: Option[Int] = None
+
+    "empty" in {
+      List(1, 2, 3).isEmpty should be (???)
+      List().isEmpty should be (???)
+      Some(2).isEmpty should be (???)
+      None.isEmpty should be (???)
+    }
+
     "map" in {
       List(1, 2, 3).map(_ * 2) shouldBe ???
       Some(2).map(_ * 2) shouldBe ???
@@ -144,6 +153,26 @@ class OptionsAndCompany extends AnyWordSpec with Matchers {
       Some(2).find(isEven) shouldBe ???
       Some(1).find(isEven) shouldBe ???
       None.find(isEven) shouldBe ???
+    }
+
+    "fold" in {
+      List(1, 2, 3, 4).fold(0)(_ + _) should be (???)
+
+      List(1, 2, 3, 4).fold(0){ case (acc, value) =>
+        acc + value
+      } should be (???)
+
+      def add(a: Int, b: Int): Int = a + b
+
+      List(1, 2, 3, 4).fold(0)(add) should be (???)
+
+      Some(2).fold(0)(8 / _) should be (???)
+      None.fold(0)(8 / _) should be (???)
+
+      def whatDoIHave(x: Option[Int]): String = x.fold("nothing")(€ => s"$€ euros")
+      s"I have ${whatDoIHave(Some(2))}." shouldBe ???
+      s"I have ${whatDoIHave(None)}." shouldBe ???
+
     }
   }
 
