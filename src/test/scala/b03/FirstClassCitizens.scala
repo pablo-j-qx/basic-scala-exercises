@@ -94,10 +94,6 @@ class FirstClassCitizens extends AnyWordSpec with Matchers {
 
       counter shouldBe 3
 
-
     }
-
-
   }
-
 }
