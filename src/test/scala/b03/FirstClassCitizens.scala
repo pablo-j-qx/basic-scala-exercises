@@ -91,7 +91,6 @@ class FirstClassCitizens extends AnyWordSpec with Matchers {
       repeat(3) { _ =>
         counter += 1
       }
-
       counter shouldBe 3
 
     }
