@@ -4,6 +4,7 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 
 class FirstClassCitizens extends AnyWordSpec with Matchers {
+import scala.annotation.tailrec
 
   // Functions are first class citizens: they have the same right that any other value
   "As first class citizens, functions" should {
@@ -14,32 +15,43 @@ class FirstClassCitizens extends AnyWordSpec with Matchers {
     "be able to be assigned" in {
       var f: Int => Int = half
 
-      f(4) should be (???)
+      f(4) should be (2)
 
       f = double
 
-      f(4) should be (???)
+      f(4) should be (8)
 
       // f = add
 
     }
 
     "be able to be used as parameter" in {
-      def applyToEven(list: List[Int], f: Int => Int): List[Int] = ???
+      def applyToEven(list: List[Int], f: Int => Int): List[Int] = list map {
+        case i if i % 2 == 0 => f(i)
+        case i => i
+      }
 
       applyToEven(List(1, 2, 3, 4), half) shouldBe List(1, 1, 3, 2)
       applyToEven(List(1, 2, 3, 4), double) shouldBe List(1, 4, 3, 8)
     }
 
     "be able to be used as parameter of a map" in {
-      List(1, 2, 3, 4).map(double) should be (???)
-      List(1, 2, 3, 4).map { x => x*2 } should be  (???)
+      List(1, 2, 3, 4).map(double) should be (List(2, 4, 6, 8))
+      List(1, 2, 3, 4).map { x => x*2 } should be  (List(2, 4, 6, 8))
 
     }
 
     "be able to be returned from a function" in {
       def getFindBetterFunction(f: Int => Int): List[Int] => Int = { list: List[Int] =>
-        ???
+        @tailrec
+        def findBetterRec(currentBetter: Int, list: List[Int]): Int = list match {
+          case Nil => currentBetter
+          case head :: tail =>
+            val newBetter = if(f(head) > f(currentBetter)) head else currentBetter
+            findBetterRec(newBetter, tail)
+        }
+
+        findBetterRec(Int.MinValue, list)
       }
 
       val findBigger = getFindBetterFunction(identity)
@@ -53,15 +65,15 @@ class FirstClassCitizens extends AnyWordSpec with Matchers {
     "be able to be partially applied" in {
       var f: Int => Int = half
 
-      f(4) should be(???)
+      f(4) should be (2)
 
       f = double
 
-      f(4) should be(???)
+      f(4) should be(8)
 
       f = add(3, _)
 
-      f(4) should be(???)
+      f(4) should be(7)
 
     }
 
@@ -70,11 +82,21 @@ class FirstClassCitizens extends AnyWordSpec with Matchers {
 
       val f: Int => Int = curryAdd(3)
 
-      f(4) should be(???)
+      f(4) should be(7)
     }
 
     "more curry" in {
-      def findBetter(f: Int => Int)(list: List[Int]): Int = ???
+      def findBetter(f: Int => Int)(list: List[Int]): Int = {
+        @tailrec
+        def findBetterRec(currentBetter: Int, list: List[Int]): Int = list match {
+          case Nil => currentBetter
+          case head :: tail =>
+            val newBetter = if (f(head) > f(currentBetter)) head else currentBetter
+            findBetterRec(newBetter, tail)
+        }
+
+        findBetterRec(Int.MinValue, list)
+      }
 
       val findBigger: List[Int] => Int = findBetter(identity)
       findBigger(List(-2, -1, 0, 1)) shouldBe 1
@@ -84,7 +106,7 @@ class FirstClassCitizens extends AnyWordSpec with Matchers {
     }
 
     "even more curry" in {
-      def repeat(times: Int)(f: Any => Any): Unit = ???
+      def repeat(times: Int)(f: Any => Any): Unit = (0 until times).foreach(f)
 
       var counter = 0
 
